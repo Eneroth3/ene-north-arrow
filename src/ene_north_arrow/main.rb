@@ -1,15 +1,9 @@
 module Eneroth
   module EnerothNorthArrow
-    ### unless defined?(Sketchup::Overlay) # TODO: Conform to Overlay API
-      unless @loaded
-        @loaded = true
+    # Vary superclass depending on whether this SketchUp version has overlays.
+    super_class = defined?(Sketchup::Overlay) ? Sketchup::Overlay : Object
 
-        menu = UI.menu("Plugins")
-        menu.add_item(EXTENSION.name) { Sketchup.active_model.select_tool(NorthArrow.new) }
-      end
-    ### end
-
-    class NorthArrow
+    class NorthArrow < super_class
       # Distance between compass and edge of screen
       MARGIN = 20
 
@@ -24,6 +18,12 @@ module Eneroth
         angle = Math::PI * 2 / SEGMENTS * i
 
         [RADIUS * Math.sin(angle), RADIUS * Math.cos(angle)]
+      end
+
+      def initialize
+        if defined?(Sketchup::Overlay)
+          super(PLUGIN_ID, EXTENSION.name, EXTENSION.description)
+        end
       end
 
       # Use Both Tool and Overlay API to make the extension work in old SU
@@ -89,7 +89,8 @@ module Eneroth
           180.degrees - view_angle(view)
         else
           # Looking at model from below. Flip compass upside down.
-          # REVIEW: Is this what we actually expect when we are ina  building and looking to the ceiling?
+          # REVIEW: Is this what we actually expect when we are in a building
+          # and looking to the ceiling?
           view_angle(view)
         end
       end
@@ -133,6 +134,35 @@ module Eneroth
       # @return [Numeric] Angle in radians between -pi and pi.
       def planar_angle(vector1, vector2, normal = Z_AXIS)
         Math.atan2((vector2 * vector1) % normal, vector1 % vector2)
+      end
+    end
+
+    if defined?(Sketchup::Overlay)
+      # If SketchUp has Overlays API, use it.
+      class OverlayAttacher < Sketchup::AppObserver
+        def expectsStartupModelNotifications
+          true
+        end
+
+        def register_overlay(model)
+          overlay = ExampleOverlay.new
+          model.overlays.add(overlay)
+        end
+        alias_method :onNewModel, :register_overlay
+        alias_method :onOpenModel, :register_overlay
+      end
+
+      observer = OverlayAttacher.new
+      Sketchup.add_observer(observer)
+
+      observer.register_overlay(Sketchup.active_model)
+    else
+      # For legacy SketchUp, fall back on Tool API and menu item.
+      unless @loaded
+        @loaded = true
+
+        menu = UI.menu("Plugins")
+        menu.add_item(EXTENSION.name) { Sketchup.active_model.select_tool(NorthArrow.new) }
       end
     end
   end
