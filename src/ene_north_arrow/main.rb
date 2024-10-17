@@ -1,14 +1,18 @@
 module Eneroth
   module EnerothNorthArrow
-    # TODO: Replace with Overlay
-    ### unless @loaded
-      @loaded = true
+    ### unless defined?(Sketchup::Overlay) # TODO: Conform to Overlay API
+      unless @loaded
+        @loaded = true
 
-      menu = UI.menu("Plugins")
-      menu.add_item(EXTENSION.name) { Sketchup.active_model.select_tool(NorthArrow.new) }
+        menu = UI.menu("Plugins")
+        menu.add_item(EXTENSION.name) { Sketchup.active_model.select_tool(NorthArrow.new) }
+      end
     ### end
 
     class NorthArrow
+      # Distance between compass and edge of screen
+      MARGIN = 20
+
       # Radius of compass in logical screen pixels.
       RADIUS = 70
 
@@ -22,24 +26,25 @@ module Eneroth
         [RADIUS * Math.sin(angle), RADIUS * Math.cos(angle)]
       end
 
+      # Use Both Tool and Overlay API to make the extension work in old SU
+      # versions.
+
+      # @api sketchup-observers
+      # https://ruby.sketchup.com/Sketchup/Tool.html
       def activate
         Sketchup.active_model.active_view.invalidate
       end
 
+      # @api sketchup-observers
+      # https://ruby.sketchup.com/Sketchup/Tool.html
       def resume(view)
         view.invalidate
       end
 
       # @api sketchup-observers
-      # @see https://ruby.sketchup.com/Sketchup/AppObserver.html
+      # @see https://ruby.sketchup.com/Sketchup/Overlay.html
+      # @see https://ruby.sketchup.com/Sketchup/Tool.html
       def draw(view)
-        # Debug stuff. TODO: Remove
-        point = [100, 100]
-        text = format_angle(view_angle(view))
-        view.draw_text(point, text)
-
-
-        # TODO: Place in lower left corner
         tr = compass_transformation(view)
 
         view.draw2d(GL_LINE_LOOP, CIRCLE_POINTS.map { |pt| pt.transform(tr) })
@@ -52,13 +57,23 @@ module Eneroth
       # Get transformation compass internal coordinates to screen space coordinates
       #
       # @param view [Sketchup::View]
-      # @param position [Geom::Point3d]
-      # @param direction [Geom::Vector3d]
       #
       # @return [Geom::Transformation]
       def compass_transformation(view)
-        Geom::Transformation.new(Geom::Point3d.new(100, 100, 0)) *
+        Geom::Transformation.new(compass_position(view)) *
           Geom::Transformation.rotation(ORIGIN, Z_AXIS, compass_angle(view))
+      end
+
+      # Screen space position of compass center.
+      #
+      # @param view [Sketchup::View]
+      #
+      # @return [Geom::Poin3d]
+      def compass_position(view)
+        # Change here to change the position of the compass on screen.
+        bottom_left_corner = Geom::Point3d.new(*view.corner(2), 0)
+
+        bottom_left_corner.offset([RADIUS + MARGIN, -RADIUS - MARGIN, 0])
       end
 
       # What direction should compass point on screen.
