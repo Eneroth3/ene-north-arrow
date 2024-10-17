@@ -84,15 +84,29 @@ module Eneroth
       #
       # @return [Float] Angle in radians.
       def compass_angle(view)
+        relative_north = view_angle(view) - north_angle(view)
+
         if view.camera.direction.z <= 0
           # Looking horizontally or from above.
-          180.degrees - view_angle(view)
+          180.degrees - relative_north
         else
           # Looking at model from below. Flip compass upside down.
           # REVIEW: Is this what we actually expect when we are in a building
           # and looking to the ceiling?
-          view_angle(view)
+          # REVIEW: Have other color when seeing compass "from below"?
+          relative_north
         end
+      end
+
+      # What direction is model north.
+      #
+      # Measured clockwise from Y axis.
+      #
+      # @param view [Sketchup::View]
+      #
+      # @return [Float] Angle in radians.
+      def north_angle(view)
+        view.model.shadow_info["NorthAngle"].degrees
       end
 
       # What direction are we looking.
