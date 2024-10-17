@@ -47,6 +47,8 @@ module Eneroth
       def draw(view)
         tr = compass_transformation(view)
 
+        view.drawing_color = flip_compass?(view) ? "red" : "black"
+
         view.draw2d(GL_LINE_LOOP, CIRCLE_POINTS.map { |pt| pt.transform(tr) })
         view.draw2d(GL_LINES, [[-RADIUS, 0, 0], [RADIUS, 0, 0]].map { |pt| pt.transform(tr) })
         view.draw2d(GL_LINES, [[0, -RADIUS, 0], [0, 0, 0]].map { |pt| pt.transform(tr) })
@@ -86,16 +88,20 @@ module Eneroth
       def compass_angle(view)
         relative_north = view_angle(view) - north_angle(view)
 
-        if view.camera.direction.z <= 0
+        if !flip_compass?(view)
           # Looking horizontally or from above.
           180.degrees - relative_north
         else
-          # Looking at model from below. Flip compass upside down.
-          # REVIEW: Is this what we actually expect when we are in a building
-          # and looking to the ceiling?
-          # REVIEW: Have other color when seeing compass "from below"?
           relative_north
         end
+      end
+
+      # When looking upwards be essentially see the bottom of the compass.
+      # It has to point the other way to look right.
+      def flip_compass?(view)
+        # Somewhat arbitrary number depending on what felt right.
+        # REVIEW: Restore 0 as threshold when in parallel projection?
+        view.camera.direction.z > 0.3
       end
 
       # What direction is model north.
