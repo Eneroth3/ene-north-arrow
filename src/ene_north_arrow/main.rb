@@ -22,7 +22,7 @@ module Eneroth
 
       def initialize
         if defined?(Sketchup::Overlay)
-          super(PLUGIN_ID, EXTENSION.name, EXTENSION.description)
+          super(PLUGIN_ID, EXTENSION.name, description: EXTENSION.description)
         end
       end
 
@@ -145,7 +145,7 @@ module Eneroth
         end
 
         def register_overlay(model)
-          overlay = ExampleOverlay.new
+          overlay = NorthArrow.new
           model.overlays.add(overlay)
         end
         alias_method :onNewModel, :register_overlay
