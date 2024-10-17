@@ -124,6 +124,7 @@ module Eneroth
       # @return [Float] Angle in radians.
       def view_angle(view)
         view_direction = view.camera.direction
+        view_direction.reverse! if view.camera.up.z < 0
         view_direction = view.camera.up if view_direction.parallel?(Z_AXIS)
 
         angle = planar_angle(Y_AXIS, view_direction)
