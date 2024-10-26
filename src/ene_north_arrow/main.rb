@@ -47,8 +47,10 @@ module Eneroth
       def draw(view)
         tr = compass_transformation(view)
 
+        view.line_stipple = ""
         view.drawing_color = flip_compass?(view) ? "red" : "black"
 
+        view.line_width = 1
         view.draw2d(GL_LINE_LOOP, CIRCLE_POINTS.map { |pt| pt.transform(tr) })
         view.draw2d(GL_LINES, [[-RADIUS, 0, 0], [RADIUS, 0, 0]].map { |pt| pt.transform(tr) })
         view.draw2d(GL_LINES, [[0, -RADIUS, 0], [0, 0, 0]].map { |pt| pt.transform(tr) })
