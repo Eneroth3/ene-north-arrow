@@ -24,7 +24,7 @@ module Eneroth
     EXTENSION.creator     = "Eneroth"
     EXTENSION.description =
       "North arrow overlay. Useful to keep yourself or your clients oriented when displaying a model."
-    EXTENSION.version     = "1.0.0"
+    EXTENSION.version     = "1.1.0"
     EXTENSION.copyright   = "2024, #{EXTENSION.creator}"
     Sketchup.register_extension(EXTENSION, true)
   end
